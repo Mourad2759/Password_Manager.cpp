@@ -50,26 +50,30 @@ private:
 
 public:
     HashMap(const string& file) : filename(file) {
-        ifstream fileIn(filename);
-        if (fileIn.is_open()) {
-            string key, value, username;
-            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
-                int index = hashFunction1(key); // For simplicity, using only one hash function for loading
-                Node* newNode = new Node(key, value, username);
-                if (table[index] == nullptr) {
-                    table[index] = newNode;
-                }
-                else {
-                    Node* temp = table[index];
-                    while (temp->next != nullptr) {
-                        temp = temp->next;
-                    }
-                    temp->next = newNode;
-                }
-            }
-            fileIn.close();
-        }
+    for (int i = 0; i < TABLE_SIZE; ++i) {
+        table[i] = nullptr;
     }
+
+    ifstream fileIn(filename);
+    if (fileIn.is_open()) {
+        string key, value, username;
+        while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
+            int index = hashFunction1(key); // For simplicity, using only one hash function for loading
+            Node* newNode = new Node(key, value, username);
+            if (table[index] == nullptr) {
+                table[index] = newNode;
+            } else {
+                Node* temp = table[index];
+                while (temp->next != nullptr) {
+                    temp = temp->next;
+                }
+                temp->next = newNode;
+            }
+        }
+        fileIn.close();
+    }
+}
+
 
     ~HashMap() {
         saveToFile(table);
