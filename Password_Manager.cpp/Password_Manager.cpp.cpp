@@ -151,6 +151,17 @@ private:
     HashMap users;
     HashMap vault;
     string loggedInUser;
+    bool isComplexPassword(const string& password) {
+    bool hasAlpha = false;
+    bool hasDigit = false;
+    for (char c : password) {
+        if (isalpha(c))
+            hasAlpha = true;
+        if (isdigit(c))
+            hasDigit = true;
+    }
+    return password.length() >= 8 && hasAlpha && hasDigit;
+}
 
 public:
     PasswordManager() : users("users.txt"), vault("vault.txt") {}
