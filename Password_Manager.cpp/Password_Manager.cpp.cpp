@@ -307,26 +307,29 @@ public:
     }
 
     void modifyPassword() {
-        if (loggedInUser.empty()) {
-            cout << "You need to log in first.\n";
-            return;
-        }
-        string appName, newPassword;
-        cout << "Enter application name to modify password: ";
-        cin >> appName;
-
-        string currentPassword = vault.get(appName, loggedInUser);
-        if (!currentPassword.empty()) {
-            vault.remove(appName, loggedInUser);
-            cout << "Enter new password for " << appName << ": ";
-            cin >> newPassword;
-            vault.insert(appName, newPassword, loggedInUser);
-            cout << "Password modified successfully.\n";
-        }
-        else {
-            cout << "Application not found in the vault.\n";
-        }
+    if (loggedInUser.empty()) {
+        cout << "You need to log in first.\n";
+        return;
     }
+    string appName, newPassword;
+    cout << "Enter application name to modify password: ";
+    cin >> appName;
+
+    string currentPassword = vault.get(appName, loggedInUser);
+    if (!currentPassword.empty()) {
+        // Remove the old password from the vault
+        vault.remove(appName, loggedInUser);
+
+        cout << "Enter new password for " << appName << ": ";
+        cin >> newPassword;
+        vault.insert(appName, newPassword, loggedInUser);
+        cout << "Password modified successfully.\n";
+    }
+    else {
+        cout << "Application not found in the vault.\n";
+    }
+}
+
 
     void generateComplexPassword() {
         string appName;
