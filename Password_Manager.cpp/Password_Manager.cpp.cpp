@@ -246,45 +246,98 @@ public:
         cout << "Logged out successfully.\n";
     }
 
-    void accessVault() {
-        int choice;
-        bool loggedIn = true;
-        while (loggedIn) {
-            cout << "\nVault Menu:\n";
-            cout << "1. Add an application and password\n";
-            cout << "2. View passwords\n";
-            cout << "3. Remove an application\n";
-            cout << "4. Modify a password\n";
-            cout << "5. Generate a complex password\n";
-            cout << "6. Logout\n";
-            cout << "Enter your choice: ";
-            cin >> choice;
+    void removeUser() {
+    string username;
+    cout << "Enter username to remove: ";
+    cin >> username;
 
-            switch (choice) {
-            case 1:
-                addApplication();
-                break;
-            case 2:
-                viewPasswords();
-                break;
-            case 3:
-                removeApplication();
-                break;
-            case 4:
-                modifyPassword();
-                break;
-            case 5:
-                generateComplexPassword();
-                break;
-            case 6:
-                logout();
-                loggedIn = false;
-                break;
-            default:
-                cout << "Invalid choice. Try again.\n";
+    if (users.contains(username, "")) {
+        cout << "Are you sure you want to remove user '" << username << "'? (yes/no): ";
+        string confirmation;
+        cin >> confirmation;
+
+        if (confirmation == "yes") {
+            // Remove the user from the users HashMap
+            users.remove(username, "");
+            // Remove all entries associated with the user from the vault HashMap
+            for (int i = 0; i < TABLE_SIZE; ++i) {
+                Node* current = vault.getTable()[i];
+                Node* prev = nullptr;
+                while (current != nullptr) {
+                    if (current->username == username) {
+                        if (prev == nullptr) {
+                            // The node to be removed is the head of the list
+                            vault.getTable()[i] = current->next;
+                            delete current;
+                            current = vault.getTable()[i];
+                        }
+                        else {
+                            prev->next = current->next;
+                            delete current;
+                            current = prev->next;
+                        }
+                    }
+                    else {
+                        prev = current;
+                        current = current->next;
+                    }
+                }
             }
+            cout << "User '" << username << "' removed successfully.\n";
+        }
+        else {
+            cout << "User removal canceled.\n";
         }
     }
+    else {
+        cout << "User '" << username << "' not found.\n";
+    }
+}
+
+
+void accessVault() {
+    int choice;
+    bool loggedIn = true;
+    while (loggedIn) {
+        cout << "\nVault Menu:\n";
+        cout << "1. Add an application and password\n";
+        cout << "2. View passwords\n";
+        cout << "3. Remove an application\n";
+        cout << "4. Modify a password\n";
+        cout << "5. Generate a complex password\n";
+        cout << "6. Remove user\n"; // New option
+        cout << "7. Logout\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            addApplication();
+            break;
+        case 2:
+            viewPasswords();
+            break;
+        case 3:
+            removeApplication();
+            break;
+        case 4:
+            modifyPassword();
+            break;
+        case 5:
+            generateComplexPassword();
+            break;
+        case 6:
+            removeUser(); // New case
+            break;
+        case 7:
+            logout();
+            loggedIn = false;
+            break;
+        default:
+            cout << "Invalid choice. Try again.\n";
+        }
+    }
+}
     void addApplication() {
         if (loggedInUser.empty()) {
             cout << "You need to log in first.\n";
