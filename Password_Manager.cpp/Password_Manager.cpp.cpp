@@ -198,6 +198,25 @@ public:
     users.insert(username, password, "");
     cout << "Account created successfully!\n";
 }
+
+
+    
+    void login() {
+        string username, password;
+        cout << "Enter username: ";
+        cin >> username;
+        cout << "Enter password: ";
+        cin >> password;
+        if (users.get(username, "") == password) {
+            cout << "Login successful!\n";
+            loggedInUser = username;
+            accessVault();
+        }
+        else {
+            cout << "Invalid username or password.\n";
+        }
+    }
+
     void logout() {
         loggedInUser = "";
         cout << "Logged out successfully.\n";
