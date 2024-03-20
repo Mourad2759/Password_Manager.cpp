@@ -1,6 +1,6 @@
 #include <iostream>
+#include <fstream>
 #include <string>
-#include <cstdlib>
 
 using namespace std;
 
@@ -16,7 +16,7 @@ struct Node {
 
 class HashMap {
 private:
-    Node* table[TABLE_SIZE];
+    string filename;
 
     int hashFunction1(const string& key) {
         int hashValue = 0;
@@ -34,22 +34,45 @@ private:
         return hashValue % TABLE_SIZE;
     }
 
+    void saveToFile(Node* table[]) {
+        ofstream fileOut(filename);
+        if (fileOut.is_open()) {
+            for (int i = 0; i < TABLE_SIZE; ++i) {
+                Node* current = table[i];
+                while (current != nullptr) {
+                    fileOut << current->key << "," << current->value << "," << current->username << endl;
+                    current = current->next;
+                }
+            }
+            fileOut.close();
+        }
+    }
+
 public:
-    HashMap() {
-        for (int i = 0; i < TABLE_SIZE; ++i) {
-            table[i] = nullptr;
+    HashMap(const string& file) : filename(file) {
+        ifstream fileIn(filename);
+        if (fileIn.is_open()) {
+            string key, value, username;
+            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
+                int index = hashFunction1(key); // For simplicity, using only one hash function for loading
+                Node* newNode = new Node(key, value, username);
+                if (table[index] == nullptr) {
+                    table[index] = newNode;
+                }
+                else {
+                    Node* temp = table[index];
+                    while (temp->next != nullptr) {
+                        temp = temp->next;
+                    }
+                    temp->next = newNode;
+                }
+            }
+            fileIn.close();
         }
     }
 
     ~HashMap() {
-        for (int i = 0; i < TABLE_SIZE; ++i) {
-            Node* current = table[i];
-            while (current != nullptr) {
-                Node* next = current->next;
-                delete current;
-                current = next;
-            }
-        }
+        saveToFile(table);
     }
 
     void insert(const string& key, const string& value, const string& username) {
@@ -114,6 +137,11 @@ public:
     Node** getTable() {
         return table;
     }
+
+    // Add other methods as needed...
+
+private:
+    Node* table[TABLE_SIZE];
 };
 
 class PasswordManager {
@@ -123,7 +151,7 @@ private:
     string loggedInUser;
 
 public:
-    PasswordManager() {}
+    PasswordManager() : users("users.txt"), vault("vault.txt") {}
 
     void createAccount() {
         string username, password;
@@ -315,3 +343,4 @@ int main() {
 
     return 0;
 }
+
