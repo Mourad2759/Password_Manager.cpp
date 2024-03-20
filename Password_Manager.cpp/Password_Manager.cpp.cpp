@@ -3,8 +3,26 @@
 #include <string>
 
 using namespace std;
-
 const int TABLE_SIZE = 100;
+
+class XOREncryption {
+public:
+    static string encrypt(const string& plaintext, const string& key) {
+        string ciphertext = "";
+        for (size_t i = 0; i < plaintext.length(); ++i) {
+            ciphertext += plaintext[i] ^ key[i % key.length()];
+        }
+        return ciphertext;
+    }
+
+    static string decrypt(const string& ciphertext, const string& key) {
+        string plaintext = "";
+        for (size_t i = 0; i < ciphertext.length(); ++i) {
+            plaintext += ciphertext[i] ^ key[i % key.length()];
+        }
+        return plaintext;
+    }
+};
 
 struct Node {
     string key;
@@ -50,30 +68,30 @@ private:
 
 public:
     HashMap(const string& file) : filename(file) {
-    for (int i = 0; i < TABLE_SIZE; ++i) {
-        table[i] = nullptr;
-    }
-
-    ifstream fileIn(filename);
-    if (fileIn.is_open()) {
-        string key, value, username;
-        while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
-            int index = hashFunction1(key); // For simplicity, using only one hash function for loading
-            Node* newNode = new Node(key, value, username);
-            if (table[index] == nullptr) {
-                table[index] = newNode;
-            } else {
-                Node* temp = table[index];
-                while (temp->next != nullptr) {
-                    temp = temp->next;
-                }
-                temp->next = newNode;
-            }
+        for (int i = 0; i < TABLE_SIZE; ++i) {
+            table[i] = nullptr;
         }
-        fileIn.close();
-    }
-}
 
+        ifstream fileIn(filename);
+        if (fileIn.is_open()) {
+            string key, value, username;
+            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
+                int index = hashFunction1(key); // For simplicity, using only one hash function for loading
+                Node* newNode = new Node(key, value, username);
+                if (table[index] == nullptr) {
+                    table[index] = newNode;
+                }
+                else {
+                    Node* temp = table[index];
+                    while (temp->next != nullptr) {
+                        temp = temp->next;
+                    }
+                    temp->next = newNode;
+                }
+            }
+            fileIn.close();
+        }
+    }
 
     ~HashMap() {
         saveToFile(table);
@@ -143,6 +161,7 @@ public:
     }
 
 private:
+    static const int TABLE_SIZE = 100;
     Node* table[TABLE_SIZE];
 };
 
@@ -151,63 +170,68 @@ private:
     HashMap users;
     HashMap vault;
     string loggedInUser;
+
     bool isComplexPassword(const string& password) {
-    bool hasAlpha = false;
-    bool hasDigit = false;
-    for (char c : password) {
-        if (isalpha(c))
-            hasAlpha = true;
-        if (isdigit(c))
-            hasDigit = true;
+        bool hasAlpha = false;
+        bool hasDigit = false;
+        for (char c : password) {
+            if (isalpha(c))
+                hasAlpha = true;
+            if (isdigit(c))
+                hasDigit = true;
+        }
+        return password.length() >= 8 && hasAlpha && hasDigit;
     }
-    return password.length() >= 8 && hasAlpha && hasDigit;
-}
 
 public:
     PasswordManager() : users("users.txt"), vault("vault.txt") {}
 
     void createAccount() {
-            string username, password;
-    bool uniqueUsername = false;
-    bool validPassword = false;
+        string username, password;
+        bool uniqueUsername = false;
+        bool validPassword = false;
 
-    do {
-        cout << "Enter username: ";
-        cin >> username;
+        do {
+            cout << "Enter username: ";
+            cin >> username;
 
-        if (users.contains(username, "")) {
-            cout << "Username already exists. Please choose another one.\n";
-        }
-        else {
-            uniqueUsername = true;
-        }
-    } while (!uniqueUsername);
+            if (users.contains(username, "")) {
+                cout << "Username already exists. Please choose another one.\n";
+            }
+            else {
+                uniqueUsername = true;
+            }
+        } while (!uniqueUsername);
 
-    do {
-        cout << "Enter password (must contain at least 8 characters including alphabetic and numeric characters): ";
-        cin >> password;
+        do {
+            cout << "Enter password (must contain at least 8 characters including alphabetic and numeric characters): ";
+            cin >> password;
 
-        if (isComplexPassword(password)) {
-            validPassword = true;
-        }
-        else {
-            cout << "Password is not complex enough. Please try again.\n";
-        }
-    } while (!validPassword);
+            if (isComplexPassword(password)) {
+                validPassword = true;
+            }
+            else {
+                cout << "Password is not complex enough. Please try again.\n";
+            }
+        } while (!validPassword);
 
-    users.insert(username, password, "");
-    cout << "Account created successfully!\n";
-}
+        // Encrypt the password before storing it
+        string encryptedPassword = XOREncryption::encrypt(password, "KEY");
 
+        users.insert(username, encryptedPassword, "");
+        cout << "Account created successfully!\n";
+    }
 
-    
     void login() {
         string username, password;
         cout << "Enter username: ";
         cin >> username;
         cout << "Enter password: ";
         cin >> password;
-        if (users.get(username, "") == password) {
+
+        string retrievedPassword = users.get(username, "");
+
+        if (!retrievedPassword.empty() && XOREncryption::decrypt(retrievedPassword, "KEY") == password) {
             cout << "Login successful!\n";
             loggedInUser = username;
             accessVault();
@@ -261,7 +285,6 @@ public:
             }
         }
     }
-
     void addApplication() {
         if (loggedInUser.empty()) {
             cout << "You need to log in first.\n";
@@ -307,28 +330,28 @@ public:
     }
 
     void modifyPassword() {
-    if (loggedInUser.empty()) {
-        cout << "You need to log in first.\n";
-        return;
-    }
-    string appName, newPassword;
-    cout << "Enter application name to modify password: ";
-    cin >> appName;
+        if (loggedInUser.empty()) {
+            cout << "You need to log in first.\n";
+            return;
+        }
+        string appName, newPassword;
+        cout << "Enter application name to modify password: ";
+        cin >> appName;
 
-    string currentPassword = vault.get(appName, loggedInUser);
-    if (!currentPassword.empty()) {
-        // Remove the old password from the vault
-        vault.remove(appName, loggedInUser);
+        string currentPassword = vault.get(appName, loggedInUser);
+        if (!currentPassword.empty()) {
+            // Remove the old password from the vault
+            vault.remove(appName, loggedInUser);
 
-        cout << "Enter new password for " << appName << ": ";
-        cin >> newPassword;
-        vault.insert(appName, newPassword, loggedInUser);
-        cout << "Password modified successfully.\n";
+            cout << "Enter new password for " << appName << ": ";
+            cin >> newPassword;
+            vault.insert(appName, newPassword, loggedInUser);
+            cout << "Password modified successfully.\n";
+        }
+        else {
+            cout << "Application not found in the vault.\n";
+        }
     }
-    else {
-        cout << "Application not found in the vault.\n";
-    }
-}
 
 
     void generateComplexPassword() {
@@ -379,4 +402,5 @@ int main() {
 
     return 0;
 }
+
 
