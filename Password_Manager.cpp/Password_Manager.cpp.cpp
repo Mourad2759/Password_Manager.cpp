@@ -142,8 +142,6 @@ public:
         return table;
     }
 
-    // Add other methods as needed...
-
 private:
     Node* table[TABLE_SIZE];
 };
