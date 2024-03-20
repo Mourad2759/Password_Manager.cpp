@@ -167,36 +167,37 @@ public:
     PasswordManager() : users("users.txt"), vault("vault.txt") {}
 
     void createAccount() {
-        string username, password;
+            string username, password;
+    bool uniqueUsername = false;
+    bool validPassword = false;
+
+    do {
         cout << "Enter username: ";
         cin >> username;
-        cout << "Enter password: ";
-        cin >> password;
+
         if (users.contains(username, "")) {
             cout << "Username already exists. Please choose another one.\n";
         }
         else {
-            users.insert(username, password, "");
-            cout << "Account created successfully!\n";
+            uniqueUsername = true;
         }
-    }
+    } while (!uniqueUsername);
 
-    void login() {
-        string username, password;
-        cout << "Enter username: ";
-        cin >> username;
-        cout << "Enter password: ";
+    do {
+        cout << "Enter password (must contain at least 8 characters including alphabetic and numeric characters): ";
         cin >> password;
-        if (users.get(username, "") == password) {
-            cout << "Login successful!\n";
-            loggedInUser = username;
-            accessVault();
+
+        if (isComplexPassword(password)) {
+            validPassword = true;
         }
         else {
-            cout << "Invalid username or password.\n";
+            cout << "Password is not complex enough. Please try again.\n";
         }
-    }
+    } while (!validPassword);
 
+    users.insert(username, password, "");
+    cout << "Account created successfully!\n";
+}
     void logout() {
         loggedInUser = "";
         cout << "Logged out successfully.\n";
