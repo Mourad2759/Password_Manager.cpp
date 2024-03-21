@@ -198,6 +198,8 @@ private:
                 hasDigit = true;
             if (isLower(c))
                 hasLower = true;
+            if (isSpecialCharacter(c))
+                hasSpecial = true;
         }
         return password.length() >= 8 && hasUpper && hasDigit  && hasLower && hasSpecial;
     }
