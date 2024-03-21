@@ -10,7 +10,7 @@ public:
     static string encrypt(const string& plaintext, const string& key) {
         string ciphertext = "";
         for (size_t i = 0; i < plaintext.length(); ++i) {
-            ciphertext += plaintext[i] ^ key[i % key.length()];
+            ciphertext += plaintext[i] ^ key[i % key.length()]; //Encrypts each character of plaintext by performing a bitwise XOR operation (^) between the character and the corresponding character of the key
         }
         return ciphertext;
     }
