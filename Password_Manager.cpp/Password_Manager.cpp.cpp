@@ -10,7 +10,7 @@ public:
     static string encrypt(const string& plaintext, const string& key) {
         string ciphertext = "";
         for (size_t i = 0; i < plaintext.length(); ++i) {
-            ciphertext += plaintext[i] ^ key[i % key.length()]; //Encrypts each character of plaintext by performing a bitwise XOR operation (^) between the character and the corresponding character of the key
+            ciphertext += plaintext[i] ^ key[i % key.length()];
         }
         return ciphertext;
     }
@@ -29,7 +29,7 @@ struct Node {
     string value;
     string username;
     Node* next;
-    Node(const string& k, const string& v, const string& u) : key(k), value(v), username(u), next(nullptr) {} //parameters passed on by the constructor
+    Node(const string& k, const string& v, const string& u) : key(k), value(v), username(u), next(nullptr) {}
 };
 
 class HashMap {
@@ -47,7 +47,7 @@ private:
     int hashFunction2(const string& key) {
         int hashValue = 0;
         for (char c : key) {
-            hashValue += c * 31;
+            hashValue += c * 31; // Using a different prime number as a multiplier for the second hash function
         }
         return hashValue % TABLE_SIZE;
     }
@@ -58,9 +58,7 @@ private:
             for (int i = 0; i < TABLE_SIZE; ++i) {
                 Node* current = table[i];
                 while (current != nullptr) {
-                    string encryptedValue = XOREncryption::encrypt(current->value, "KEY");
-                    string encryptedUsername = XOREncryption::encrypt(current->username, "KEY");
-                    fileOut << current->key << "," << encryptedValue << "," << encryptedUsername << endl;
+                    fileOut << current->key << "," << current->value << "," << current->username << endl;
                     current = current->next;
                 }
             }
@@ -78,10 +76,8 @@ public:
         if (fileIn.is_open()) {
             string key, value, username;
             while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
-                int index = hashFunction1(key);
-                string decryptedValue = XOREncryption::decrypt(value, "KEY");
-                string decryptedUsername = XOREncryption::decrypt(username, "KEY");
-                Node* newNode = new Node(key, decryptedValue, decryptedUsername);
+                int index = hashFunction1(key); // For simplicity, using only one hash function for loading
+                Node* newNode = new Node(key, value, username);
                 if (table[index] == nullptr) {
                     table[index] = newNode;
                 }
@@ -159,6 +155,7 @@ public:
         }
     }
 
+    // Public method to access the table
     Node** getTable() {
         return table;
     }
@@ -174,34 +171,16 @@ private:
     HashMap vault;
     string loggedInUser;
 
-    bool isSpecialCharacter(char c) {
-        const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-        for (char specialChar : specialChars) {
-            if (c == specialChar) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     bool isComplexPassword(const string& password) {
-        bool hasUpper = false;
+        bool hasAlpha = false;
         bool hasDigit = false;
-        bool hasLower = false;
-        bool hasSpecial = false;
-
         for (char c : password) {
-            if (isSpecialCharacter(c))
-                hasSpecial = true;
-            if (isupper(c))
-                hasUpper = true;
+            if (isalpha(c))
+                hasAlpha = true;
             if (isdigit(c))
                 hasDigit = true;
-            if (islower(c))
-                hasLower = true;
-
         }
-        return password.length() >= 8 && hasUpper && hasDigit && hasLower && hasSpecial;
+        return password.length() >= 8 && hasAlpha && hasDigit;
     }
 
 public:
@@ -236,9 +215,16 @@ public:
             }
         } while (!validPassword);
 
+        // Encrypt the username and password before storing them
+        string encryptedUsername = XOREncryption::encrypt(username, "KEY");
         string encryptedPassword = XOREncryption::encrypt(password, "KEY");
 
-        users.insert(username, encryptedPassword, "");
+        // Generate an ID for the user (could be a hash of the username)
+        string userId = to_string(hash<string>{}(encryptedUsername));
+
+        // Store the encrypted username and password with the generated ID
+        users.insert(userId, encryptedPassword, "");
+
         cout << "Account created successfully!\n";
     }
 
@@ -249,7 +235,12 @@ public:
         cout << "Enter password: ";
         cin >> password;
 
-        string retrievedPassword = users.get(username, "");
+        // Encrypt the username to retrieve the encrypted ID
+        string encryptedUsername = XOREncryption::encrypt(username, "KEY");
+        string userId = to_string(hash<string>{}(encryptedUsername));
+
+        // Retrieve the encrypted password using the encrypted ID
+        string retrievedPassword = users.get(userId, "");
 
         if (!retrievedPassword.empty() && XOREncryption::decrypt(retrievedPassword, "KEY") == password) {
             cout << "Login successful!\n";
@@ -475,3 +466,4 @@ int main() {
 
     return 0;
 }
+
