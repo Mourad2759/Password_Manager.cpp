@@ -171,16 +171,35 @@ private:
     HashMap vault;
     string loggedInUser;
 
-    bool isComplexPassword(const string& password) {  //checks if the password has a letter and a digit and has a length greater than 8
-        bool hasAlpha = false;
+    bool isSpecialCharacter(char c) {
+    // Define your set of special characters
+    const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+    // Check if the character is in the set of special characters
+    for (char specialChar : specialChars) {
+        if (c == specialChar) {
+            return true;
+        }
+    }
+
+    // If the character is not found in the set, it's not a special character
+    return false;
+}
+
+    bool isComplexPassword(const string& password) {  //checks if the password is a complex password
+        bool hasUpper = false;
         bool hasDigit = false;
+        bool hasLower = false;
+        bool hasSpecial = false;
         for (char c : password) {
-            if (isalpha(c))
-                hasAlpha = true;
+            if (isUpper(c))
+                hasUpper = true;
             if (isdigit(c))
                 hasDigit = true;
+            if (isLower(c))
+                hasLower = true;
         }
-        return password.length() >= 8 && hasAlpha && hasDigit;
+        return password.length() >= 8 && hasUpper && hasDigit  && hasLower && hasSpecial;
     }
 
 public:
