@@ -39,9 +39,9 @@ private:
     int hashFunction1(const string& key) {
         int hashValue = 0;
         for (char c : key) {
-            hashValue += c;  // hash function that sums up the ASCII values of all characters in the key.
+            hashValue += c; // hash function that sums up the ASCII values of all characters in the key.
         }
-        return hashValue % TABLE_SIZE;  // function returns the hash value modulus the table size to ensure that the  hash value falls within the range of the hash table's size.
+        return hashValue % TABLE_SIZE; // function returns the hash value modulus the table size to ensure that the  hash value falls within the range of the hash table's size.
     }
 
     int hashFunction2(const string& key) {
@@ -58,8 +58,8 @@ private:
             for (int i = 0; i < TABLE_SIZE; ++i) {
                 Node* current = table[i];
                 while (current != nullptr) {
-                    fileOut << current->key << "," << current->value << "," << current->username << endl;  //Writes the key, value, and username of the current node to the file separated by commas.
-                    current = current->next;  // Moves the pointer to the next node in the linked list
+                    fileOut << current->key << "," << current->value << "," << current->username << endl; //Writes the key, value, and username of the current node to the file separated by commas.
+                    current = current->next; // Moves the pointer to the next node in the linked list
                 }
             }
             fileOut.close();
@@ -75,16 +75,16 @@ public:
         ifstream fileIn(filename);
         if (fileIn.is_open()) {
             string key, value, username;
-            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
+            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {  //Reads lines from the file, splitting them by commas, and stores the values into key, value, and username variables.
                 int index = hashFunction1(key); 
-                Node* newNode = new Node(key, value, username);  // Creates a new node with the key, value, and username.
+                Node* newNode = new Node(key, value, username); // Creates a new node with the key, value, and username.
                 if (table[index] == nullptr) {  // checks if the slot at the array 'table' is empty at index
                     table[index] = newNode;
                 }
                 else {
-                    Node* temp = table[index];  //Initializes a temporary pointer 'temp' to point to the head of the linked list at index 'index'.
-                    while (temp->next != nullptr) {  // Traverses the linked list to find the last node.
-                        temp = temp->next;  
+                    Node* temp = table[index]; //Initializes a temporary pointer 'temp' to point to the head of the linked list at index 'index'.
+                    while (temp->next != nullptr) { // Traverses the linked list to find the last node.
+                        temp = temp->next;
                     }
                     temp->next = newNode;
                 }
@@ -103,10 +103,10 @@ public:
         int index = index1;
         int step = 1;
         while (table[index] != nullptr) {  //Starts a loop that continues until it finds an empty slot in the hash table at the calculated index
-            index = (index1 + step * index2) % TABLE_SIZE;  //calculates a new index using a linear probing technique to handle collisions
+            index = (index1 + step * index2) % TABLE_SIZE; //calculates a new index using a linear probing technique to handle collisions
             ++step;
         }
-        table[index] = new Node(key, value, username);  //Once an empty slot is found, it creates a new node with the given key, value, and username, and inserts it into the hash table at the calculated index.
+        table[index] = new Node(key, value, username); //Once an empty slot is found, it creates a new node with the given key, value, and username, and inserts it into the hash table at the calculated index.
     }
 
     string get(const string& key, const string& username) {
@@ -172,36 +172,39 @@ private:
     string loggedInUser;
 
     bool isSpecialCharacter(char c) {
-    // Define your set of special characters
-    const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+        // Define your set of special characters
+        const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
 
-    // Check if the character is in the set of special characters
-    for (char specialChar : specialChars) {
-        if (c == specialChar) {
-            return true;
+        // Check if the character is in the set of special characters
+        for (char specialChar : specialChars) {
+            if (c == specialChar) {
+                return true;
+            }
         }
+
+        // If the character is not found in the set, it's not a special character
+        return false;
     }
 
-    // If the character is not found in the set, it's not a special character
-    return false;
-}
 
-    bool isComplexPassword(const string& password) {  //checks if the password is a complex password
+    bool isComplexPassword(const string& password) { //checks if the password has a letter and a digit and has a length greater than 8
         bool hasUpper = false;
         bool hasDigit = false;
         bool hasLower = false;
         bool hasSpecial = false;
+
         for (char c : password) {
-            if (isUpper(c))
+            if (isSpecialCharacter(c))
+               hasSpecial = true;
+            if (isupper(c))
                 hasUpper = true;
             if (isdigit(c))
                 hasDigit = true;
-            if (isLower(c))
+            if (islower(c))
                 hasLower = true;
-            if (isSpecialCharacter(c))
-                hasSpecial = true;
+            
         }
-        return password.length() >= 8 && hasUpper && hasDigit  && hasLower && hasSpecial;
+        return password.length() >= 8 && hasUpper && hasDigit && hasLower && hasSpecial;
     }
 
 public:
@@ -268,7 +271,7 @@ public:
     }
     void removeUser() {
         string username;
-        cout << "Enter username to remove: ";
+        cout << "Confirm your username: ";
         cin >> username;
 
         if (users.contains(username, "")) {
@@ -328,7 +331,7 @@ public:
             cout << "3. Remove an application\n";
             cout << "4. Modify a password\n";
             cout << "5. Generate a complex password\n";
-            cout << "6. Remove user\n"; // New option
+            cout << "6. Remove user\n"; 
             cout << "7. Logout\n";
             cout << "Enter your choice: ";
             cin >> choice;
@@ -350,7 +353,7 @@ public:
                 generateComplexPassword();
                 break;
             case 6:
-                removeUser(); // New case
+                removeUser(); 
                 break;
             case 7:
                 logout();
