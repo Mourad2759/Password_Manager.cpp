@@ -171,7 +171,7 @@ private:
     HashMap vault;
     string loggedInUser;
 
-    bool isComplexPassword(const string& password) {
+    bool isComplexPassword(const string& password) {  //checks if the password has a letter and a digit and has a length greater than 8
         bool hasAlpha = false;
         bool hasDigit = false;
         for (char c : password) {
