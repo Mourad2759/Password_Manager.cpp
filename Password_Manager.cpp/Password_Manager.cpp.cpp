@@ -29,7 +29,7 @@ struct Node {
     string value;
     string username;
     Node* next;
-    Node(const string& k, const string& v, const string& u) : key(k), value(v), username(u), next(nullptr) {}
+    Node(const string& k, const string& v, const string& u) : key(k), value(v), username(u), next(nullptr) {} //parameters passed on by the constructor
 };
 
 class HashMap {
@@ -39,9 +39,9 @@ private:
     int hashFunction1(const string& key) {
         int hashValue = 0;
         for (char c : key) {
-            hashValue += c;
+            hashValue += c;  // hash function that sums up the ASCII values of all characters in the key.
         }
-        return hashValue % TABLE_SIZE;
+        return hashValue % TABLE_SIZE;  // function returns the hash value modulus the table size to ensure that the  hash value falls within the range of the hash table's size.
     }
 
     int hashFunction2(const string& key) {
@@ -58,8 +58,8 @@ private:
             for (int i = 0; i < TABLE_SIZE; ++i) {
                 Node* current = table[i];
                 while (current != nullptr) {
-                    fileOut << current->key << "," << current->value << "," << current->username << endl;
-                    current = current->next;
+                    fileOut << current->key << "," << current->value << "," << current->username << endl;  //Writes the key, value, and username of the current node to the file separated by commas.
+                    current = current->next;  // Moves the pointer to the next node in the linked list
                 }
             }
             fileOut.close();
@@ -69,22 +69,22 @@ private:
 public:
     HashMap(const string& file) : filename(file) {
         for (int i = 0; i < TABLE_SIZE; ++i) {
-            table[i] = nullptr;
+            table[i] = nullptr;  // Indicates that intially all slots in the hash table are empty
         }
 
         ifstream fileIn(filename);
         if (fileIn.is_open()) {
             string key, value, username;
             while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
-                int index = hashFunction1(key); // For simplicity, using only one hash function for loading
-                Node* newNode = new Node(key, value, username);
-                if (table[index] == nullptr) {
+                int index = hashFunction1(key); 
+                Node* newNode = new Node(key, value, username);  // Creates a new node with the key, value, and username.
+                if (table[index] == nullptr) {  // checks if the slot at the array 'table' is empty at index
                     table[index] = newNode;
                 }
                 else {
-                    Node* temp = table[index];
-                    while (temp->next != nullptr) {
-                        temp = temp->next;
+                    Node* temp = table[index];  //Initializes a temporary pointer 'temp' to point to the head of the linked list at index 'index'.
+                    while (temp->next != nullptr) {  // Traverses the linked list to find the last node.
+                        temp = temp->next;  
                     }
                     temp->next = newNode;
                 }
