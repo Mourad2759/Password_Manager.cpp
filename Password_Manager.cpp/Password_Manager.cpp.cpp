@@ -58,7 +58,8 @@ private:
             for (int i = 0; i < TABLE_SIZE; ++i) {
                 Node* current = table[i];
                 while (current != nullptr) {
-                    fileOut << current->key << "," << current->value << "," << current->username << endl; //Writes the key, value, and username of the current node to the file separated by commas.
+                    string encryptedValue = XOREncryption::encrypt(current->value, "KEY");
+                    fileOut << current->key << "," << encryptedValue << "," << current->username << endl; //Writes the key, encrypted value, and username of the current node to the file separated by commas.
                     current = current->next; // Moves the pointer to the next node in the linked list
                 }
             }
@@ -69,15 +70,16 @@ private:
 public:
     HashMap(const string& file) : filename(file) {
         for (int i = 0; i < TABLE_SIZE; ++i) {
-            table[i] = nullptr;  // Indicates that intially all slots in the hash table are empty
+            table[i] = nullptr;  // Indicates that initially all slots in the hash table are empty
         }
 
         ifstream fileIn(filename);
         if (fileIn.is_open()) {
             string key, value, username;
-            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {  //Reads lines from the file, splitting them by commas, and stores the values into key, value, and username variables.
-                int index = hashFunction1(key); 
-                Node* newNode = new Node(key, value, username); // Creates a new node with the key, value, and username.
+            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {  //Reads lines from the file, splitting them by commas, and stores the values into key, encrypted value, and username variables.
+                int index = hashFunction1(key);
+                string decryptedValue = XOREncryption::decrypt(value, "KEY");
+                Node* newNode = new Node(key, decryptedValue, username); // Creates a new node with the key, decrypted value, and username.
                 if (table[index] == nullptr) {  // checks if the slot at the array 'table' is empty at index
                     table[index] = newNode;
                 }
@@ -186,7 +188,6 @@ private:
         return false;
     }
 
-
     bool isComplexPassword(const string& password) { //checks if the password has a letter and a digit and has a length greater than 8
         bool hasUpper = false;
         bool hasDigit = false;
@@ -195,14 +196,14 @@ private:
 
         for (char c : password) {
             if (isSpecialCharacter(c))
-               hasSpecial = true;
+                hasSpecial = true;
             if (isupper(c))
                 hasUpper = true;
             if (isdigit(c))
                 hasDigit = true;
             if (islower(c))
                 hasLower = true;
-            
+
         }
         return password.length() >= 8 && hasUpper && hasDigit && hasLower && hasSpecial;
     }
@@ -331,7 +332,7 @@ public:
             cout << "3. Remove an application\n";
             cout << "4. Modify a password\n";
             cout << "5. Generate a complex password\n";
-            cout << "6. Remove user\n"; 
+            cout << "6. Remove user\n";
             cout << "7. Logout\n";
             cout << "Enter your choice: ";
             cin >> choice;
@@ -353,7 +354,7 @@ public:
                 generateComplexPassword();
                 break;
             case 6:
-                removeUser(); 
+                removeUser();
                 break;
             case 7:
                 logout();
