@@ -102,11 +102,11 @@ public:
         int index2 = hashFunction2(key);
         int index = index1;
         int step = 1;
-        while (table[index] != nullptr) {
-            index = (index1 + step * index2) % TABLE_SIZE;
+        while (table[index] != nullptr) {  //Starts a loop that continues until it finds an empty slot in the hash table at the calculated index
+            index = (index1 + step * index2) % TABLE_SIZE;  //calculates a new index using a linear probing technique to handle collisions
             ++step;
         }
-        table[index] = new Node(key, value, username);
+        table[index] = new Node(key, value, username);  //Once an empty slot is found, it creates a new node with the given key, value, and username, and inserts it into the hash table at the calculated index.
     }
 
     string get(const string& key, const string& username) {
