@@ -39,15 +39,15 @@ private:
     int hashFunction1(const string& key) {
         int hashValue = 0;
         for (char c : key) {
-            hashValue += c; // hash function that sums up the ASCII values of all characters in the key.
+            hashValue += c;
         }
-        return hashValue % TABLE_SIZE; // function returns the hash value modulus the table size to ensure that the  hash value falls within the range of the hash table's size.
+        return hashValue % TABLE_SIZE;
     }
 
     int hashFunction2(const string& key) {
         int hashValue = 0;
         for (char c : key) {
-            hashValue += c * 31; // Using a different prime number as a multiplier for the second hash function
+            hashValue += c * 31;
         }
         return hashValue % TABLE_SIZE;
     }
@@ -59,8 +59,9 @@ private:
                 Node* current = table[i];
                 while (current != nullptr) {
                     string encryptedValue = XOREncryption::encrypt(current->value, "KEY");
-                    fileOut << current->key << "," << encryptedValue << "," << current->username << endl; //Writes the key, encrypted value, and username of the current node to the file separated by commas.
-                    current = current->next; // Moves the pointer to the next node in the linked list
+                    string encryptedUsername = XOREncryption::encrypt(current->username, "KEY");
+                    fileOut << current->key << "," << encryptedValue << "," << encryptedUsername << endl;
+                    current = current->next;
                 }
             }
             fileOut.close();
@@ -70,22 +71,23 @@ private:
 public:
     HashMap(const string& file) : filename(file) {
         for (int i = 0; i < TABLE_SIZE; ++i) {
-            table[i] = nullptr;  // Indicates that initially all slots in the hash table are empty
+            table[i] = nullptr;
         }
 
         ifstream fileIn(filename);
         if (fileIn.is_open()) {
             string key, value, username;
-            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {  //Reads lines from the file, splitting them by commas, and stores the values into key, encrypted value, and username variables.
+            while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
                 int index = hashFunction1(key);
                 string decryptedValue = XOREncryption::decrypt(value, "KEY");
-                Node* newNode = new Node(key, decryptedValue, username); // Creates a new node with the key, decrypted value, and username.
-                if (table[index] == nullptr) {  // checks if the slot at the array 'table' is empty at index
+                string decryptedUsername = XOREncryption::decrypt(username, "KEY");
+                Node* newNode = new Node(key, decryptedValue, decryptedUsername);
+                if (table[index] == nullptr) {
                     table[index] = newNode;
                 }
                 else {
-                    Node* temp = table[index]; //Initializes a temporary pointer 'temp' to point to the head of the linked list at index 'index'.
-                    while (temp->next != nullptr) { // Traverses the linked list to find the last node.
+                    Node* temp = table[index];
+                    while (temp->next != nullptr) {
                         temp = temp->next;
                     }
                     temp->next = newNode;
@@ -104,11 +106,11 @@ public:
         int index2 = hashFunction2(key);
         int index = index1;
         int step = 1;
-        while (table[index] != nullptr) {  //Starts a loop that continues until it finds an empty slot in the hash table at the calculated index
-            index = (index1 + step * index2) % TABLE_SIZE; //calculates a new index using a linear probing technique to handle collisions
+        while (table[index] != nullptr) {
+            index = (index1 + step * index2) % TABLE_SIZE;
             ++step;
         }
-        table[index] = new Node(key, value, username); //Once an empty slot is found, it creates a new node with the given key, value, and username, and inserts it into the hash table at the calculated index.
+        table[index] = new Node(key, value, username);
     }
 
     string get(const string& key, const string& username) {
@@ -157,7 +159,6 @@ public:
         }
     }
 
-    // Public method to access the table
     Node** getTable() {
         return table;
     }
@@ -174,21 +175,16 @@ private:
     string loggedInUser;
 
     bool isSpecialCharacter(char c) {
-        // Define your set of special characters
         const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
-
-        // Check if the character is in the set of special characters
         for (char specialChar : specialChars) {
             if (c == specialChar) {
                 return true;
             }
         }
-
-        // If the character is not found in the set, it's not a special character
         return false;
     }
 
-    bool isComplexPassword(const string& password) { //checks if the password has a letter and a digit and has a length greater than 8
+    bool isComplexPassword(const string& password) {
         bool hasUpper = false;
         bool hasDigit = false;
         bool hasLower = false;
@@ -240,7 +236,6 @@ public:
             }
         } while (!validPassword);
 
-        // Encrypt the password before storing it
         string encryptedPassword = XOREncryption::encrypt(password, "KEY");
 
         users.insert(username, encryptedPassword, "");
@@ -270,6 +265,7 @@ public:
         loggedInUser = "";
         cout << "Logged out successfully.\n";
     }
+
     void removeUser() {
         string username;
         cout << "Confirm your username: ";
@@ -281,16 +277,13 @@ public:
             cin >> confirmation;
 
             if (confirmation == "yes") {
-                // Remove the user from the users HashMap
                 users.remove(username, "");
-                // Remove all entries associated with the user from the vault HashMap
                 for (int i = 0; i < TABLE_SIZE; ++i) {
                     Node* current = vault.getTable()[i];
                     Node* prev = nullptr;
                     while (current != nullptr) {
                         if (current->username == username) {
                             if (prev == nullptr) {
-                                // The node to be removed is the head of the list
                                 vault.getTable()[i] = current->next;
                                 delete current;
                                 current = vault.getTable()[i];
@@ -308,7 +301,6 @@ public:
                     }
                 }
                 cout << "User '" << username << "' removed successfully.\n";
-                // After successful removal, return to the main menu
                 return;
             }
             else {
@@ -318,7 +310,6 @@ public:
         else {
             cout << "User '" << username << "' not found.\n";
         }
-        // Return to the main menu even if the removal was canceled or the user was not found
         cout << "Returning to the main menu...\n";
     }
 
@@ -376,7 +367,8 @@ public:
         cin >> appName;
         cout << "Enter password for " << appName << ": ";
         cin >> password;
-        vault.insert(appName, password, loggedInUser);
+        string encryptedPassword = XOREncryption::encrypt(password, "KEY");
+        vault.insert(appName, encryptedPassword, loggedInUser);
         cout << "Password added successfully.\n";
     }
 
@@ -391,7 +383,8 @@ public:
             Node* current = table[i];
             while (current != nullptr) {
                 if (current->username == loggedInUser) {
-                    cout << current->key << " : " << current->value << endl;
+                    string decryptedPassword = XOREncryption::decrypt(current->value, "KEY");
+                    cout << current->key << " : " << decryptedPassword << endl;
                 }
                 current = current->next;
             }
@@ -421,12 +414,11 @@ public:
 
         string currentPassword = vault.get(appName, loggedInUser);
         if (!currentPassword.empty()) {
-            // Remove the old password from the vault
             vault.remove(appName, loggedInUser);
-
             cout << "Enter new password for " << appName << ": ";
             cin >> newPassword;
-            vault.insert(appName, newPassword, loggedInUser);
+            string encryptedPassword = XOREncryption::encrypt(newPassword, "KEY");
+            vault.insert(appName, encryptedPassword, loggedInUser);
             cout << "Password modified successfully.\n";
         }
         else {
@@ -434,13 +426,13 @@ public:
         }
     }
 
-
     void generateComplexPassword() {
         string appName;
         cout << "Enter application name for the new password: ";
         cin >> appName;
         string newPassword = generateRandomPassword(12);
-        vault.insert(appName, newPassword, loggedInUser);
+        string encryptedPassword = XOREncryption::encrypt(newPassword, "KEY");
+        vault.insert(appName, encryptedPassword, loggedInUser);
         cout << "Generated complex password for " << appName << ": " << newPassword << endl;
     }
 
