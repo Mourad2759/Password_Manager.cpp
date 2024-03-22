@@ -1,8 +1,10 @@
+
 #include <iostream>
 #include <fstream>
 #include <string>
 
 using namespace std;
+
 const int TABLE_SIZE = 100;
 
 class XOREncryption {
@@ -93,6 +95,7 @@ public:
         }
     }
 
+
     ~HashMap() {
         saveToFile(table);
     }
@@ -161,7 +164,6 @@ public:
     }
 
 private:
-    static const int TABLE_SIZE = 100;
     Node* table[TABLE_SIZE];
 };
 
@@ -171,16 +173,37 @@ private:
     HashMap vault;
     string loggedInUser;
 
+    bool isSpecialCharacter(char c) {
+        // Define your set of special characters
+        const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+        // Check if the character is in the set of special characters
+        for (char specialChar : specialChars) {
+            if (c == specialChar) {
+                return true;
+            }
+        }
+
+        // If the character is not found in the set, it's not a special character
+        return false;
+    }
+
     bool isComplexPassword(const string& password) {
-        bool hasAlpha = false;
+        bool hasUpper = false;
+        bool hasLower = false;
         bool hasDigit = false;
+        bool hasSpecial = false;
         for (char c : password) {
-            if (isalpha(c))
-                hasAlpha = true;
+            if (isupper(c))
+                hasUpper = true;
+            if (islower(c))
+                hasLower = true;
             if (isdigit(c))
                 hasDigit = true;
+            if (isSpecialCharacter(c))
+                hasSpecial = true;
         }
-        return password.length() >= 8 && hasAlpha && hasDigit;
+        return password.length() >= 8 && hasUpper && hasLower && hasDigit;
     }
 
 public:
@@ -191,41 +214,17 @@ public:
         bool uniqueUsername = false;
         bool validPassword = false;
 
-        do {
-            cout << "Enter username: ";
-            cin >> username;
-
-            if (users.contains(username, "")) {
-                cout << "Username already exists. Please choose another one.\n";
-            }
-            else {
-                uniqueUsername = true;
-            }
-        } while (!uniqueUsername);
-
-        do {
-            cout << "Enter password (must contain at least 8 characters including alphabetic and numeric characters): ";
-            cin >> password;
-
-            if (isComplexPassword(password)) {
-                validPassword = true;
-            }
-            else {
-                cout << "Password is not complex enough. Please try again.\n";
-            }
-        } while (!validPassword);
-
-        // Encrypt the username and password before storing them
-        string encryptedUsername = XOREncryption::encrypt(username, "KEY");
-        string encryptedPassword = XOREncryption::encrypt(password, "KEY");
-
-        // Generate an ID for the user (could be a hash of the username)
-        string userId = to_string(hash<string>{}(encryptedUsername));
-
-        // Store the encrypted username and password with the generated ID
-        users.insert(userId, encryptedPassword, "");
-
-        cout << "Account created successfully!\n";
+        cout << "Enter username: ";
+        cin >> username;
+        cout << "Enter password: ";
+        cin >> password;
+        if (users.contains(username, "")) {
+            cout << "Username already exists. Please choose another one.\n";
+        }
+        else {
+            users.insert(username, password, "");
+            cout << "Account created successfully!\n";
+        }
     }
 
     void login() {
@@ -234,15 +233,7 @@ public:
         cin >> username;
         cout << "Enter password: ";
         cin >> password;
-
-        // Encrypt the username to retrieve the encrypted ID
-        string encryptedUsername = XOREncryption::encrypt(username, "KEY");
-        string userId = to_string(hash<string>{}(encryptedUsername));
-
-        // Retrieve the encrypted password using the encrypted ID
-        string retrievedPassword = users.get(userId, "");
-
-        if (!retrievedPassword.empty() && XOREncryption::decrypt(retrievedPassword, "KEY") == password) {
+        if (users.get(username, "") == password) {
             cout << "Login successful!\n";
             loggedInUser = username;
             accessVault();
@@ -256,7 +247,6 @@ public:
         loggedInUser = "";
         cout << "Logged out successfully.\n";
     }
-
     void removeUser() {
         string username;
         cout << "Confirm your username: ";
@@ -358,8 +348,7 @@ public:
         cin >> appName;
         cout << "Enter password for " << appName << ": ";
         cin >> password;
-        string encryptedPassword = XOREncryption::encrypt(password, "KEY");
-        vault.insert(appName, encryptedPassword, loggedInUser);
+        vault.insert(appName, password, loggedInUser);
         cout << "Password added successfully.\n";
     }
 
@@ -374,8 +363,7 @@ public:
             Node* current = table[i];
             while (current != nullptr) {
                 if (current->username == loggedInUser) {
-                    string decryptedPassword = XOREncryption::decrypt(current->value, "KEY");
-                    cout << current->key << " : " << decryptedPassword << endl;
+                    cout << current->key << " : " << current->value << endl;
                 }
                 current = current->next;
             }
@@ -408,8 +396,7 @@ public:
             vault.remove(appName, loggedInUser);
             cout << "Enter new password for " << appName << ": ";
             cin >> newPassword;
-            string encryptedPassword = XOREncryption::encrypt(newPassword, "KEY");
-            vault.insert(appName, encryptedPassword, loggedInUser);
+            vault.insert(appName, newPassword, loggedInUser);
             cout << "Password modified successfully.\n";
         }
         else {
@@ -422,8 +409,7 @@ public:
         cout << "Enter application name for the new password: ";
         cin >> appName;
         string newPassword = generateRandomPassword(12);
-        string encryptedPassword = XOREncryption::encrypt(newPassword, "KEY");
-        vault.insert(appName, encryptedPassword, loggedInUser);
+        vault.insert(appName, newPassword, loggedInUser);
         cout << "Generated complex password for " << appName << ": " << newPassword << endl;
     }
 
@@ -466,4 +452,3 @@ int main() {
 
     return 0;
 }
-
