@@ -1,4 +1,3 @@
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -51,7 +50,7 @@ private:
         for (char c : key) {
             hashValue += c * 31; // Using a different prime number as a multiplier for the second hash function
         }
-        return hashValue % TABLE_SIZE;
+        return (hashValue % 97) + 1; // Ensuring the second hash value is non-zero and less than TABLE_SIZE
     }
 
     void saveToFile(Node* table[]) {
@@ -84,17 +83,22 @@ public:
                     table[index] = newNode;
                 }
                 else {
-                    Node* temp = table[index];
-                    while (temp->next != nullptr) {
-                        temp = temp->next;
+                    // Use double hashing for collision resolution
+                    int index2 = hashFunction2(key);
+                    int step = 1;
+                    while (true) {
+                        int newIndex = (index + step * index2) % TABLE_SIZE;
+                        if (table[newIndex] == nullptr) {
+                            table[newIndex] = newNode;
+                            break;
+                        }
+                        ++step;
                     }
-                    temp->next = newNode;
                 }
             }
             fileIn.close();
         }
     }
-
 
     ~HashMap() {
         saveToFile(table);
@@ -106,7 +110,7 @@ public:
         int index = index1;
         int step = 1;
         while (table[index] != nullptr) {
-            index = (index1 + step * index2) % TABLE_SIZE;
+            index = (index + step * index2) % TABLE_SIZE;
             ++step;
         }
         table[index] = new Node(key, value, username);
@@ -121,7 +125,7 @@ public:
             if (table[index]->key == key && table[index]->username == username) {
                 return table[index]->value;
             }
-            index = (index1 + step * index2) % TABLE_SIZE;
+            index = (index + step * index2) % TABLE_SIZE;
             ++step;
         }
         return "";
@@ -136,7 +140,7 @@ public:
             if (table[index]->key == key && table[index]->username == username) {
                 return true;
             }
-            index = (index1 + step * index2) % TABLE_SIZE;
+            index = (index + step * index2) % TABLE_SIZE;
             ++step;
         }
         return false;
@@ -153,7 +157,7 @@ public:
                 table[index] = nullptr;
                 return;
             }
-            index = (index1 + step * index2) % TABLE_SIZE;
+            index = (index + step * index2) % TABLE_SIZE;
             ++step;
         }
     }
@@ -203,7 +207,7 @@ private:
             if (isSpecialCharacter(c))
                 hasSpecial = true;
         }
-        return password.length() >= 8 && hasUpper && hasLower && hasDigit;
+        return password.length() >= 8 && hasUpper && hasLower && hasDigit && hasSpecial;
     }
 
 public:
@@ -216,15 +220,28 @@ public:
 
         cout << "Enter username: ";
         cin >> username;
-        cout << "Enter password: ";
-        cin >> password;
-        if (users.contains(username, "")) {
-            cout << "Username already exists. Please choose another one.\n";
+
+        // Prompt the user until a unique username is entered
+        while (users.contains(username, "")) {
+            cout << "Username already exists. Please choose another one: ";
+            cin >> username;
         }
-        else {
-            users.insert(username, password, "");
-            cout << "Account created successfully!\n";
+
+        // Prompt the user until a complex password is entered
+        while (!validPassword) {
+            cout << "Enter password: ";
+            cin >> password;
+
+            if (isComplexPassword(password)) {
+                validPassword = true;
+            }
+            else {
+                cout << "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character.\n";
+            }
         }
+
+        users.insert(username, password, "");
+        cout << "Account created successfully!\n";
     }
 
     void login() {
