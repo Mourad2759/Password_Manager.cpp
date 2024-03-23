@@ -73,12 +73,17 @@ private:
         return (hashValue % 97) + 1; // Ensuring the second hash value is non-zero and less than TABLE_SIZE
     }
 
+    // Function to save encrypted data to the file
     void saveToFile(Node* table[]) {
+        // Open the file for writing
         ofstream fileOut(filename);
         if (fileOut.is_open()) {
+            // Iterates through the hash table
             for (int i = 0; i < TABLE_SIZE; ++i) {
                 Node* current = table[i];
+                // Traverses the linked list at each index
                 while (current != nullptr) {
+                    // Write encrypted key, value, and username to the file
                     fileOut << encrypt(current->key) << "," << encrypt(current->value) << "," << encrypt(current->username) << endl;
                     current = current->next;
                 }
@@ -96,12 +101,16 @@ public:
         ifstream fileIn(filename);
         if (fileIn.is_open()) {
             string key, value, username;
+            // Reads data from the file separated by commas
             while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
                 key = decrypt(key);
                 value = decrypt(value);
                 username = decrypt(username);
-                int index = hashFunction1(key); // For simplicity, using only one hash function for loading
+                // Calculates hash indexes using hash functions as the key
+                int index = hashFunction1(key);
+                // Create a new node with decrypted data
                 Node* newNode = new Node(key, value, username);
+                // Check if the slot at hash index is empty
                 if (table[index] == nullptr) {
                     table[index] = newNode;
                 }
@@ -109,6 +118,7 @@ public:
                     // Use double hashing for collision resolution
                     int index2 = hashFunction2(key);
                     int step = 1;
+                    // used to find the next empty slot in the table
                     while (true) {
                         int newIndex = (index + step * index2) % TABLE_SIZE;
                         if (table[newIndex] == nullptr) {
@@ -127,6 +137,7 @@ public:
         saveToFile(table);
     }
 
+    // inserts data into the hash table
     void insert(const string& key, const string& value, const string& username) {
         int index1 = hashFunction1(key);
         int index2 = hashFunction2(key);
@@ -139,6 +150,7 @@ public:
         table[index] = new Node(key, value, username);
     }
 
+    // retrieves the value(password) associated with a given key and username
     string get(const string& key, const string& username) {
         int index1 = hashFunction1(key);
         int index2 = hashFunction2(key);
@@ -154,6 +166,7 @@ public:
         return "";
     }
 
+    // Check if a given key and username exist in the hash table
     bool contains(const string& key, const string& username) {
         int index1 = hashFunction1(key);
         int index2 = hashFunction2(key);
@@ -169,6 +182,7 @@ public:
         return false;
     }
 
+    // Removes the entry with the given key and username from the hash table
     void remove(const string& key, const string& username) {
         int index1 = hashFunction1(key);
         int index2 = hashFunction2(key);
@@ -244,13 +258,13 @@ public:
         cout << "Enter username: ";
         cin >> username;
 
-        // Prompt the user until a unique username is entered
+        // Prompts the user until a unique username is entered
         while (users.contains(username, "")) {
             cout << "Username already exists. Please choose another one: ";
             cin >> username;
         }
 
-        // Prompt the user until a complex password is entered
+        // Prompts the user until a complex password is entered
         while (!validPassword) {
             cout << "Enter password: ";
             cin >> password;
@@ -267,12 +281,14 @@ public:
         cout << "Account created successfully!\n";
     }
 
+    // Function to prompt user for login credentials and validate them
     void login() {
         string username, password;
         cout << "Enter username: ";
         cin >> username;
         cout << "Enter password: ";
         cin >> password;
+        // Validates username and password using the users hash map
         if (users.get(username, "") == password) {
             cout << "Login successful!\n";
             loggedInUser = username;
@@ -287,6 +303,8 @@ public:
         loggedInUser = "";
         cout << "Logged out successfully.\n";
     }
+
+    // Function to remove a user account
     void removeUser() {
         string username;
         cout << "Confirm your username: ";
@@ -298,7 +316,11 @@ public:
             cin >> confirmation;
 
             if (confirmation == "yes") {
+
+                // Removes the user from the users hash map
                 users.remove(username, "");
+
+                // Removes user's entries from the vault hash map
                 for (int i = 0; i < TABLE_SIZE; ++i) {
                     Node* current = vault.getTable()[i];
                     Node* prev = nullptr;
@@ -378,6 +400,7 @@ public:
         }
     }
 
+    // allows users to add an application and it's password
     void addApplication() {
         if (loggedInUser.empty()) {
             cout << "You need to log in first.\n";
@@ -392,6 +415,7 @@ public:
         cout << "Password added successfully.\n";
     }
 
+    // Let's users view their passwords by retrieving them from the vault.txt file
     void viewPasswords() {
         if (loggedInUser.empty()) {
             cout << "You need to log in first.\n";
@@ -410,6 +434,7 @@ public:
         }
     }
 
+    // allows the users to remove passwords from their vault
     void removeApplication() {
         if (loggedInUser.empty()) {
             cout << "You need to log in first.\n";
@@ -422,6 +447,7 @@ public:
         cout << "Application removed successfully.\n";
     }
 
+    // allows password modification
     void modifyPassword() {
         if (loggedInUser.empty()) {
             cout << "You need to log in first.\n";
@@ -444,6 +470,7 @@ public:
         }
     }
 
+    // generates a complex password
     void generateComplexPassword() {
         string appName;
         cout << "Enter application name for the new password: ";
