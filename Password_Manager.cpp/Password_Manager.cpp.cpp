@@ -6,24 +6,44 @@ using namespace std;
 
 const int TABLE_SIZE = 100;
 
-class XOREncryption {
-public:
-    static string encrypt(const string& plaintext, const string& key) {
-        string ciphertext = "";
-        for (size_t i = 0; i < plaintext.length(); ++i) {
-            ciphertext += plaintext[i] ^ key[i % key.length()];
-        }
-        return ciphertext;
-    }
+// Encryption key for Caesar cipher
+const int SHIFT = 3;
 
-    static string decrypt(const string& ciphertext, const string& key) {
-        string plaintext = "";
-        for (size_t i = 0; i < ciphertext.length(); ++i) {
-            plaintext += ciphertext[i] ^ key[i % key.length()];
+// Function to encrypt a string using Caesar cipher
+string encrypt(const string& plaintext) {
+    string ciphertext = "";
+    for (char c : plaintext) {
+        if (isalpha(c)) {
+            char shifted = c + SHIFT;
+            if ((isupper(c) && shifted > 'Z') || (islower(c) && shifted > 'z')) {
+                shifted -= 26; // Wrap around if shifted character exceeds the alphabet range
+            }
+            ciphertext += shifted;
         }
-        return plaintext;
+        else {
+            ciphertext += c; // Non-alphabetic characters remain unchanged
+        }
     }
-};
+    return ciphertext;
+}
+
+// Function to decrypt a string using Caesar cipher
+string decrypt(const string& ciphertext) {
+    string plaintext = "";
+    for (char c : ciphertext) {
+        if (isalpha(c)) {
+            char shifted = c - SHIFT;
+            if ((isupper(c) && shifted < 'A') || (islower(c) && shifted < 'a')) {
+                shifted += 26; // Wrap around if shifted character goes below the alphabet range
+            }
+            plaintext += shifted;
+        }
+        else {
+            plaintext += c; // Non-alphabetic characters remain unchanged
+        }
+    }
+    return plaintext;
+}
 
 struct Node {
     string key;
@@ -59,7 +79,7 @@ private:
             for (int i = 0; i < TABLE_SIZE; ++i) {
                 Node* current = table[i];
                 while (current != nullptr) {
-                    fileOut << current->key << "," << current->value << "," << current->username << endl;
+                    fileOut << encrypt(current->key) << "," << encrypt(current->value) << "," << encrypt(current->username) << endl;
                     current = current->next;
                 }
             }
@@ -77,6 +97,9 @@ public:
         if (fileIn.is_open()) {
             string key, value, username;
             while (getline(fileIn, key, ',') && getline(fileIn, value, ',') && getline(fileIn, username)) {
+                key = decrypt(key);
+                value = decrypt(value);
+                username = decrypt(username);
                 int index = hashFunction1(key); // For simplicity, using only one hash function for loading
                 Node* newNode = new Node(key, value, username);
                 if (table[index] == nullptr) {
